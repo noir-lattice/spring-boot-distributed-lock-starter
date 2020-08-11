@@ -11,8 +11,8 @@ jar {
 	enabled = true
 }
 
-group = 'com.noir'
-version = '0.1.0-SNAPSHOT'
+group = 'com.github.noir-lattice'
+version = '0.1.0-RELEASE'
 sourceCompatibility = '1.8'
 
 configurations {
@@ -57,24 +57,42 @@ artifacts {
 	archives javadocJar, sourcesJar
 }
 
+signing {
+	sign configurations.archives
+}
+
+javadoc {
+	description = "生成jar格式的javadoc。"
+	// 只显示 protected 和 public 的类和成员
+	options.memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
+	options.author = true
+	options.version = true
+	options.header = project.name
+	// 静默javadoc检查（比如不支持@date会报错等），jdk 8+
+	options.addStringOption('Xdoclint:none', '-quiet')
+	// 防止本地打开中文乱码
+	options.addStringOption("charset", "UTF-8")
+	// suppress warnings due to cross-module @see and @link references;
+	// note that global 'api' task does display all warnings.
+	logging.captureStandardError LogLevel.INFO
+	// suppress "## warnings" message
+	logging.captureStandardOutput LogLevel.INFO
+	// 编码一定要配置否则直接出错
+	options.encoding = "UTF-8"
+	options.charSet = "UTF-8"
+}
+
 uploadArchives {
-
-	def properties = new Properties()
-	def inputStream = project.rootProject.file('local.properties').newDataInputStream()
-	properties.load( inputStream )
-
 	repositories {
 		mavenDeployer {
-			beforeDeployment {
-				MavenDeployment deployment -> signing.signPom(deployment)
+			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
 			}
 
-			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-				authentication(userName: properties.get('ossrhUsername'), password: properties.get('ossrhPassword'))
-			}
-
-			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-				authentication(userName: properties.get('ossrhUsername'), password: properties.get('ossrhPassword'))
+			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+				authentication(userName: ossrhUsername, password: ossrhPassword)
 			}
 
 			pom.project {
