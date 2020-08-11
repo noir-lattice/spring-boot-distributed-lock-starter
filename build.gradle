@@ -4,6 +4,9 @@ plugins {
 	id 'java'
 }
 
+apply plugin: 'maven'
+apply plugin: 'signing'
+
 jar {
 	enabled = true
 }
@@ -38,4 +41,70 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+}
+
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives javadocJar, sourcesJar
+}
+
+uploadArchives {
+
+	def properties = new Properties()
+	def inputStream = project.rootProject.file('local.properties').newDataInputStream()
+	properties.load( inputStream )
+
+	repositories {
+		mavenDeployer {
+			beforeDeployment {
+				MavenDeployment deployment -> signing.signPom(deployment)
+			}
+
+			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+				authentication(userName: properties.get('ossrhUsername'), password: properties.get('ossrhPassword'))
+			}
+
+			snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+				authentication(userName: properties.get('ossrhUsername'), password: properties.get('ossrhPassword'))
+			}
+
+			pom.project {
+				name 'spring-boot-distributed-lock-starter'
+				packaging 'jar'
+				// optionally artifactId can be defined here
+				description 'A distributed lock springboot supports'
+				url 'https://github.com/noir-lattice/spring-boot-distributed-lock-starter'
+
+				scm {
+					connection 'scm:git:git@github.com:noir-lattice/spring-boot-distributed-lock-starter.git'
+					developerConnection 'scm:git:git@github.com:noir-lattice/spring-boot-distributed-lock-starter.git'
+					url 'https://github.com/noir-lattice/spring-boot-distributed-lock-starter'
+				}
+
+				licenses {
+					license {
+						name 'The Apache License, Version 2.0'
+						url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+					}
+				}
+
+				developers {
+					developer {
+						id 'noir'
+						name 'noir'
+						email '13232297691@163.com'
+					}
+				}
+			}
+		}
+	}
 }
