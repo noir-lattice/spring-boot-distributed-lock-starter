@@ -41,11 +41,11 @@ public class DLockAspect {
     public void pointCut(DLock dLock){}
 
     @Around(value = "pointCut(dLock)", argNames = "proceedingJoinPoint,dLock")
-    public Object around(ProceedingJoinPoint proceedingJoinPoint, DLock dLock){
+    public Object around(ProceedingJoinPoint proceedingJoinPoint, DLock dLock) throws Throwable {
         return doCheck(proceedingJoinPoint, dLock);
     }
 
-    private Object doCheck(ProceedingJoinPoint proceedingJoinPoint, DLock dLock){
+    private Object doCheck(ProceedingJoinPoint proceedingJoinPoint, DLock dLock) throws Throwable {
         //得到被切面修饰的方法的参数列表
         Object[] args = proceedingJoinPoint.getArgs();
         // 得到被代理的方法
@@ -67,11 +67,6 @@ public class DLockAspect {
                 }
             }
             return proceedingJoinPoint.proceed();
-        } catch (TryLockFailException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-            throw new RuntimeException(throwable);
         } finally {
             for (Lock lock:locks) {
                 if (lock != null) {
