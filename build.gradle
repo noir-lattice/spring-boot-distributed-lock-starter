@@ -12,7 +12,7 @@ jar {
 }
 
 group = 'com.github.noir-lattice'
-version = '0.1.0-RELEASE'
+version = '0.1.1-RELEASE'
 sourceCompatibility = '1.8'
 
 configurations {
