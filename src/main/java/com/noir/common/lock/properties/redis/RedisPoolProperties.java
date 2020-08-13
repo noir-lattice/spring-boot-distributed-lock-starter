@@ -19,8 +19,9 @@ public class RedisPoolProperties {
 
     private int soTimeout;
 
-    /**
-     * 池大小
-     */
-    private  int size;
+    private int size;
+
+    private int masterConnectionPoolSize;
+
+    private int slaveConnectionPoolSize;
 }

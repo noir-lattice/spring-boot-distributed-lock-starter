@@ -19,7 +19,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -120,13 +119,10 @@ public class LockStarterAutoConfiguration {
         System.out.println("cluster redisProperties:" + redisDLockProperties.getCluster());
 
         Config config = new Config();
-        String[] nodes = redisDLockProperties.getCluster().getNodes().split(",");
-        List<String> newNodes = new ArrayList<>(nodes.length);
-        Arrays.stream(nodes).forEach((index) -> newNodes.add(
-                index.startsWith("redis://") ? index : "redis://" + index));
+        String[] nodes = extractRedisAddressByString(redisDLockProperties.getCluster().getNodes());
 
         ClusterServersConfig serverConfig = config.useClusterServers()
-                .addNodeAddress(newNodes.toArray(new String[0]))
+                .addNodeAddress(nodes)
                 .setScanInterval(
                         redisDLockProperties.getCluster().getScanInterval())
                 .setIdleConnectionTimeout(
@@ -153,16 +149,14 @@ public class LockStarterAutoConfiguration {
     /**
      * 哨兵模式 redisson 客户端
      */
-    RedissonClient redissonSentinel(RedisDLockProperties redisDLockProperties) {
+    private RedissonClient redissonSentinel(RedisDLockProperties redisDLockProperties) {
         System.out.println("sentinel redisProperties:" + redisDLockProperties.getSentinel());
         Config config = new Config();
-        String[] nodes = redisDLockProperties.getSentinel().getNodes().split(",");
-        List<String> newNodes = new ArrayList<>(nodes.length);
-        Arrays.stream(nodes).forEach((index) -> newNodes.add(
-                index.startsWith("redis://") ? index : "redis://" + index));
+
+        String[] nodes = extractRedisAddressByString(redisDLockProperties.getSentinel().getNodes());
 
         SentinelServersConfig serverConfig = config.useSentinelServers()
-                .addSentinelAddress(newNodes.toArray(new String[0]))
+                .addSentinelAddress(nodes)
                 .setMasterName(redisDLockProperties.getSentinel().getMaster())
                 .setReadMode(ReadMode.SLAVE)
                 .setFailedAttempts(redisDLockProperties.getSentinel().getFailMax())
@@ -177,4 +171,10 @@ public class LockStarterAutoConfiguration {
         return Redisson.create(config);
     }
 
+    private String[] extractRedisAddressByString(String nodeStr) {
+        String[] nodes = nodeStr.split(",");
+        return Arrays.stream(nodes)
+                        .map(str -> str.startsWith("redis://") ? str : "redis://" + str)
+                        .toArray(String[]::new);
+    }
 }
