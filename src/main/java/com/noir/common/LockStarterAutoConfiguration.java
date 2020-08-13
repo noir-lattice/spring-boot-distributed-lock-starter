@@ -161,8 +161,8 @@ public class LockStarterAutoConfiguration {
                 .setReadMode(ReadMode.SLAVE)
                 .setFailedAttempts(redisDLockProperties.getSentinel().getFailMax())
                 .setTimeout(redisDLockProperties.getTimeout())
-                .setMasterConnectionPoolSize(redisDLockProperties.getPool().getSize())
-                .setSlaveConnectionPoolSize(redisDLockProperties.getPool().getSize());
+                .setMasterConnectionPoolSize(redisDLockProperties.getPool().getMasterConnectionPoolSize())
+                .setSlaveConnectionPoolSize(redisDLockProperties.getPool().getSlaveConnectionPoolSize());
 
         if (!StringUtils.isEmpty(redisDLockProperties.getPassword())) {
             serverConfig.setPassword(redisDLockProperties.getPassword());
