@@ -27,6 +27,8 @@ public abstract class ReentrantDLock implements Lock {
 
     protected void exit(String lockName) {
         List<String> locks = localLocks.get();
-        locks.remove(lockName);
+        if (Objects.nonNull(locks)) {
+            locks.remove(lockName);
+        }
     }
 }
