@@ -19,12 +19,12 @@ Maven：
     <dependency>
         <groupId>com.github.lattice-boot.common</groupId>
         <artifactId>spring-boot-distributed-lock-starter</artifactId>
-        <version>0.1.1</version>
+        <version>0.1.2</version>
     </dependency>
 ```   
 Gradle:
 ```
-    compile group: 'com.github.lattice-boot.common', name: 'spring-boot-distributed-lock-starter', version: '0.1.1'
+    compile group: 'com.github.lattice-boot.common', name: 'spring-boot-distributed-lock-starter', version: '0.1.2'
 ```
 
 ## config
@@ -93,7 +93,7 @@ locker:
 ```
 
 ## use
-可以简单的通过注解上锁
+可以简单的通过注解上锁(支持元注解并使用alias annotation)
 ```java
 @Dlock("lock_#{#accountId}")
 public void changeAccount(Long accountId) {
