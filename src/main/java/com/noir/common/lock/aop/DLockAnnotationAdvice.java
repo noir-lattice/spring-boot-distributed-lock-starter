@@ -2,18 +2,12 @@ package com.noir.common.lock.aop;
 
 import com.noir.common.lock.DLockFactory;
 import com.noir.common.lock.annotation.DLock;
-
 import com.noir.common.lock.excptions.TryLockFailException;
-import lombok.extern.slf4j.Slf4j;
-
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
-import org.springframework.core.annotation.Order;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -29,27 +23,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
-@Slf4j
-@Aspect
-@Order(1)
 @Component
-public class DLockAspect {
+public class DLockAnnotationAdvice implements MethodInterceptor {
     @Autowired
     private DLockFactory lockFactory;
 
-    @Pointcut(value = "@annotation(dLock)")
-    public void pointCut(DLock dLock){}
-
-    @Around(value = "pointCut(dLock)", argNames = "proceedingJoinPoint,dLock")
-    public Object around(ProceedingJoinPoint proceedingJoinPoint, DLock dLock) throws Throwable {
-        return doCheck(proceedingJoinPoint, dLock);
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        return doLock(invocation);
     }
 
-    private Object doCheck(ProceedingJoinPoint proceedingJoinPoint, DLock dLock) throws Throwable {
-        //得到被切面修饰的方法的参数列表
-        Object[] args = proceedingJoinPoint.getArgs();
-        // 得到被代理的方法
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+    private Object doLock(MethodInvocation invocation) throws Throwable {
+        Object[] args = invocation.getArguments();
+        Method method = invocation.getMethod();
+        Class<?> clz = method.getDeclaringClass();
+
+        DLock dLock = AnnotatedElementUtils.findMergedAnnotation(clz, DLock.class);
+        DLock methodDLock = AnnotatedElementUtils.findMergedAnnotation(method, DLock.class);
+        if (Objects.nonNull(methodDLock)) {
+            dLock = methodDLock;
+        }
+        assert dLock != null;
 
         // 创建解析器
         ExpressionParser parser = new SpelExpressionParser();
@@ -66,7 +60,7 @@ public class DLockAspect {
                     throw new TryLockFailException();
                 }
             }
-            return proceedingJoinPoint.proceed();
+            return invocation.proceed();
         } finally {
             for (Lock lock:locks) {
                 if (lock != null) {
@@ -101,5 +95,4 @@ public class DLockAspect {
         }
         return context;
     }
-
 }
