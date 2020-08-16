@@ -1,4 +1,4 @@
 package com.noir.common.lock.excptions;
 
-public class TryLockFailException extends RuntimeException {
+public class TryLockFailException extends Exception {
 }

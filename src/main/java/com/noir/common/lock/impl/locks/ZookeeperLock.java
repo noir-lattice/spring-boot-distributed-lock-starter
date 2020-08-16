@@ -69,8 +69,6 @@ public class ZookeeperLock extends ReentrantDLock implements Watcher {
         }
         try {
             String splitStr = "_lock_";
-            if(lockName.contains(splitStr))
-                throw new TryLockFailException();
             //创建临时子节点
             myZNode = zk.create(root + "/" + lockName + splitStr, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
             System.out.println(myZNode + " is created ");
@@ -95,7 +93,7 @@ public class ZookeeperLock extends ReentrantDLock implements Watcher {
             String subMyZNode = myZNode.substring(myZNode.lastIndexOf("/") + 1);
             waitNode = lockObjNodes.get(Collections.binarySearch(lockObjNodes, subMyZNode) - 1);
         } catch (KeeperException | InterruptedException e) {
-            throw new TryLockFailException();
+            e.printStackTrace();
         }
         return false;
     }
