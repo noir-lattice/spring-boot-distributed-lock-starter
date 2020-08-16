@@ -15,7 +15,7 @@ import java.util.concurrent.locks.Condition;
 /**
  * setNX and getSet lock
  *
- * !!!: 依赖过期时间，过短会失去隔离性，过长影响资源可用性
+ * 依赖过期时间，过短会失去隔离性，过长影响资源可用性
  */
 public class RedisSetNXExpireLock extends ReentrantDLock {
     private static final Long DEFAULT_TIMEOUT_SECONDS = 30L;

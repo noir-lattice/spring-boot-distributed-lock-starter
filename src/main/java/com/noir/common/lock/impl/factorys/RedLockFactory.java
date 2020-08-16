@@ -1,7 +1,9 @@
 package com.noir.common.lock.impl.factorys;
 
 import com.noir.common.lock.DLockFactory;
+import com.noir.common.lock.ReentrantDLock;
 import com.noir.common.lock.impl.locks.RedLockWrapper;
+import com.noir.common.lock.impl.locks.RedisSetNXExpireLock;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,9 @@ import java.util.concurrent.locks.Lock;
 
 /**
  * red lock factory
+ *
+ * {@link RedLockWrapper}的工厂，这里仅
+ * 做匹配locker.type来提供IoC容器中的{@link RedLockFactory}
  */
 @Component
 @ConditionalOnProperty(prefix = "locker", value = "type", havingValue = "red-lock")

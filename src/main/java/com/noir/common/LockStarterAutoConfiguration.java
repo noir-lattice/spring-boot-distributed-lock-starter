@@ -24,6 +24,20 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+/**
+ * starter配置启动类
+ *
+ * 扫描了 {@link com.noir.common.lock} 下的
+ * 所有类进行初始化，包含aop，对应配置的工程类，
+ * 对应中间件配置以及封装使用的service
+ *
+ * 仅在 {@code locker.enabled=true} 时有效
+ *
+ * 具体实现参考接口及拓展类
+ * @see com.noir.common.lock.DLockFactory
+ * @see com.noir.common.lock.LockableService
+ * @see com.noir.common.lock.ReentrantDLock
+ */
 @Slf4j
 @Configuration
 @ComponentScan("com.noir.common.lock")

@@ -1,8 +1,6 @@
 package com.noir.common.lock.impl.locks;
 
 import com.noir.common.lock.ReentrantDLock;
-import com.noir.common.lock.excptions.NotGetLocException;
-import com.noir.common.lock.excptions.TryLockFailException;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
@@ -16,7 +14,7 @@ import java.util.concurrent.locks.Condition;
 /**
  * zookeeper lock
  *
- * !!!: 依赖zk，发生死锁场景低，并发支持不如缓存
+ * 依赖zk，发生死锁场景低，并发支持不如缓存
  */
 public class ZookeeperLock extends ReentrantDLock implements Watcher {
     private final ZooKeeper zk;
@@ -59,7 +57,7 @@ public class ZookeeperLock extends ReentrantDLock implements Watcher {
                 waitForLock(waitNode, sessionTimeout);//等待锁
             }
         } catch (KeeperException | InterruptedException e) {
-            throw new NotGetLocException();
+            e.printStackTrace();
         }
     }
 

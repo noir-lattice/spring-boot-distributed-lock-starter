@@ -23,6 +23,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.stream.Collectors;
 
+/**
+ * 具体的注解解析advice
+ *
+ * 实现拓展了 {@link MethodInterceptor} 以支持
+ * 对于方法的上锁增强，通过查找方法及其类上的注解对
+ * 相应资源进行上锁或等待。
+ *
+ * 拓展提供了对方法参数的SpEL解析，可以通过如
+ * {@code @DLock("#{#xxx}")} 来获取传入参
+ * 数的解析与资源的上锁
+ *
+ * 资源锁依赖 {@link DLockFactory}来获取实现了
+ * {@link Lock} 的实例并对资源进行后续操作，如有
+ * 疑惑可看工厂类的接口及其下实现
+ * @see com.noir.common.lock.DLockFactory
+ */
 @Component
 public class DLockAnnotationAdvice implements MethodInterceptor {
     @Autowired

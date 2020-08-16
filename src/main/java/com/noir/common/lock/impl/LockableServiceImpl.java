@@ -15,6 +15,12 @@ import java.util.concurrent.locks.Lock;
 
 /**
  * 加锁逻辑的服务
+ *
+ * 此处做的是对于{@link DLockFactory},必须要
+ * 在IoC容器中存在对应实现下才会有对应的服务接入，
+ * 同样的，因为这里仅是对DLockFactory的浅封装，
+ * 更多的实现，请参考
+ * @see DLockFactory
  */
 @Slf4j
 @Service

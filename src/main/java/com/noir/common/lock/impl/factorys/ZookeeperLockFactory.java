@@ -1,6 +1,7 @@
 package com.noir.common.lock.impl.factorys;
 
 import com.noir.common.lock.DLockFactory;
+import com.noir.common.lock.impl.locks.RedLockWrapper;
 import com.noir.common.lock.impl.locks.ZookeeperLock;
 import lombok.SneakyThrows;
 import org.apache.zookeeper.ZooKeeper;
@@ -13,6 +14,9 @@ import java.util.concurrent.locks.Lock;
 
 /**
  * zookeeper lock factory
+ *
+ * {@link ZookeeperLock}的工厂，这里仅
+ * 做匹配locker.type来提供IoC容器中的{@link RedLockFactory}
  */
 @Component
 @ConditionalOnProperty(prefix = "locker", value = "type", havingValue = "zookeeper")

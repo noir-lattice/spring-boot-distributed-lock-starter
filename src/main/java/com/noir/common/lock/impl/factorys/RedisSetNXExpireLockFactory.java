@@ -12,6 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * nx expire lock factory
+ *
+ * {@link RedisSetNXExpireLock}的工厂，这里仅
+ * 做匹配locker.type来提供IoC容器中的{@link RedLockFactory}
  */
 @Component
 @ConditionalOnProperty(prefix = "locker", value = "type", havingValue = "redis-expire")

@@ -5,6 +5,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 
+/**
+ * 可重入DLock拓展
+ *
+ * 使用thread local实现锁状态标定，如拓展实现
+ * 自定义的锁实现，请务必在解锁后 {@link ReentrantDLock#exit(String)}
+ * 以保证状态的清除
+ *
+ * 提供的四种实现
+ * @see com.noir.common.lock.impl.locks.RedLockWrapper
+ * @see com.noir.common.lock.impl.locks.RedisSetNXGetSetLock
+ * @see com.noir.common.lock.impl.locks.RedisSetNXExpireLock
+ * @see com.noir.common.lock.impl.locks.ZookeeperLock
+ */
 public abstract class ReentrantDLock implements Lock {
     private ThreadLocal<List<String>> localLocks = new ThreadLocal<>();
 

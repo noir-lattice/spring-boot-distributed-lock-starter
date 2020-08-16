@@ -4,6 +4,16 @@ import java.util.concurrent.Callable;
 
 /**
  * 具有加锁逻辑的服务接口
+ *
+ * 提供了lambda表达式的上锁支持，标定锁名称
+ * 与对应的Callable或者Runnable即可实现对
+ * 块级逻辑的资源锁定，对于多个资源的锁定可以
+ * 通过多级嵌套进行实现，同样的，因为默认实现
+ * 的工程均实现了可重入接口 {@link ReentrantDLock}
+ * 在未使用自定义的DLockFactory时均可重入
+ *
+ * 具体的实现
+ * @see com.noir.common.lock.impl.LockableServiceImpl
  */
 public interface LockableService {
 

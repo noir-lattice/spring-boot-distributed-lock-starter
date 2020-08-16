@@ -8,6 +8,14 @@ import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * 方法注解advisor
+ *
+ * 用于标定方法上有 {@link com.noir.common.lock.annotation.DLock}
+ * 的切点与对应AnnotationAdvice
+ *
+ * @see com.noir.common.lock.aop.DLockAnnotationAdvice
+ */
 @Component
 public class DLockMethodAnnotationAdvisor extends AbstractPointcutAdvisor {
 
