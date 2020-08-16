@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Configuration
 @ComponentScan("com.noir.common.lock")
+@ConditionalOnProperty(prefix = "locker", value = "enabled", havingValue = "true")
 @EnableConfigurationProperties({DLockProperties.class, RedisDLockProperties.class, RedLockProperties.class, ZookeeperDLockProperties.class})
 public class LockStarterAutoConfiguration {
     @Autowired(required = false)
