@@ -2,13 +2,17 @@ package com.noir.common.lock.aop;
 
 import com.noir.common.lock.DLockFactory;
 import com.noir.common.lock.annotation.DLock;
+import com.noir.common.lock.excptions.ErrorParseLockKey;
 import com.noir.common.lock.excptions.TryLockFailException;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.ParseException;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -16,12 +20,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
-import java.util.stream.Collectors;
 
 /**
  * 具体的注解解析advice
@@ -43,6 +46,12 @@ import java.util.stream.Collectors;
 public class DLockAnnotationAdvice implements MethodInterceptor {
     @Autowired
     private DLockFactory lockFactory;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    // method params discover
+    private final LocalVariableTableParameterNameDiscoverer parameterNameDiscoverer = new LocalVariableTableParameterNameDiscoverer();
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -66,10 +75,13 @@ public class DLockAnnotationAdvice implements MethodInterceptor {
         // 创建上下文
         StandardEvaluationContext ctx = creteCtx(method, args);
 
-        List<Lock> locks = Arrays.stream(dLock.value())
-                .map(origin -> parseKey(parser, ctx, origin))
-                .map(lockFactory::getLock)
-                .collect(Collectors.toList());
+        List<Lock> locks = new LinkedList<>();
+        for (String lockResourceEL : dLock.value()) {
+            // el parse
+            String lockResource = parseKey(parser, ctx, lockResourceEL);
+            locks.add(lockFactory.getLock(lockResource));
+        }
+
         try {
             for (Lock lock:locks) {
                 if (!lock.tryLock(dLock.timeOutSecond(), TimeUnit.SECONDS)) {
@@ -89,17 +101,20 @@ public class DLockAnnotationAdvice implements MethodInterceptor {
     /**
      * SpEL解析
      */
-    private String parseKey(ExpressionParser parser, StandardEvaluationContext ctx, String key) {
+    private String parseKey(ExpressionParser parser, StandardEvaluationContext ctx, String key) throws ErrorParseLockKey {
         if (StringUtils.isEmpty(key)) return "";
-        return parser.parseExpression(key, new TemplateParserContext()).getValue(ctx, String.class);
+        try {
+            return parser.parseExpression(key, new TemplateParserContext()).getValue(ctx, String.class);
+        } catch (ParseException e) {
+            throw new ErrorParseLockKey();
+        }
     }
 
     /**
      * 初始化解析上下文
      */
     private StandardEvaluationContext creteCtx(Method method, Object[] args) {
-        LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
-        String[] paraNameArr = u.getParameterNames(method);
+        String[] paraNameArr = parameterNameDiscoverer.getParameterNames(method);
 
         //SpEL上下文
         StandardEvaluationContext context = new StandardEvaluationContext();
@@ -109,6 +124,8 @@ public class DLockAnnotationAdvice implements MethodInterceptor {
                 context.setVariable(paraNameArr[i], args[i]);
             }
         }
+        // bean ctx support
+        context.setBeanResolver(new BeanFactoryResolver(applicationContext));
         return context;
     }
 }
