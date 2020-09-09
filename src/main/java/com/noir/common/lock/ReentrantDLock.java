@@ -19,7 +19,7 @@ import java.util.concurrent.locks.Lock;
  * @see com.noir.common.lock.impl.locks.ZookeeperLock
  */
 public abstract class ReentrantDLock implements Lock {
-    private ThreadLocal<List<String>> localLocks = new ThreadLocal<>();
+    private static final ThreadLocal<List<String>> localLocks = new ThreadLocal<>();
 
     protected boolean isEntered(String lockName) {
         List<String> locks = localLocks.get();
