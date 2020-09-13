@@ -31,12 +31,12 @@ Maven：
     <dependency>
         <groupId>com.github.lattice-boot.common</groupId>
         <artifactId>spring-boot-distributed-lock-starter</artifactId>
-        <version>0.1.5-RELEASE</version>
+        <version>0.1.6-RELEASE</version>
     </dependency>
 ```   
 Gradle:
 ```
-    compile group: 'com.github.lattice-boot.common', name: 'spring-boot-distributed-lock-starter', version: '0.1.5-RELEASE'
+    compile group: 'com.github.lattice-boot.common', name: 'spring-boot-distributed-lock-starter', version: '0.1.6-RELEASE'
 ```
 
 ## config
