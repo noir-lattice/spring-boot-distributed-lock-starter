@@ -61,7 +61,7 @@ public class LockableServiceImpl implements LockableService {
     }
 
     @Override
-    public void lockAndExecute(String key, Runnable runnable) throws Exception {
+    public void lockAndExecute(String key, LockerRunnable runnable) throws Exception {
         Lock lock = lockFactory.getLock(key, DEFAULT_LOCK_EXPIRED_TIME, TimeUnit.MINUTES);
         if (lock == null) {
             log.error("获取锁失败. key: {}", key);
@@ -79,4 +79,5 @@ public class LockableServiceImpl implements LockableService {
             lock.unlock();
         }
     }
+
 }

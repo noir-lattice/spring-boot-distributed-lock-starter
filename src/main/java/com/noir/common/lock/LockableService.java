@@ -35,5 +35,13 @@ public interface LockableService {
      * @param runnable 执行的操作
      * @throws Exception runnable任务执行过程中产生的异常
      */
-    void lockAndExecute(String key, Runnable runnable) throws Exception;
+    void lockAndExecute(String key, LockerRunnable runnable) throws Exception;
+
+    /**
+     * 带异常抛出的runnable
+     */
+    @FunctionalInterface
+    interface LockerRunnable {
+        void run() throws Exception;
+    }
 }

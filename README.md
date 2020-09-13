@@ -12,6 +12,18 @@
  * JDK 8+
  * Maven or Gradle
  * Spring boot
+ 
+## feature
+  * 实现的四种锁均支持可重入
+  * 单节点redis锁的实现较健壮，保证资源隔离
+  * zk锁的顺序支持
+  * 注解式的锁与编程性锁
+  * 提供自定义锁拓展点（自定义实现DLockFactory）
+
+## todo
+  * 单节点redis锁的续约
+  * 对于打到同一个服务的资源锁是否可以实现支持锁的降级策略
+  * 对于redis的sleep自旋的优化
 
 ## install
 Maven：
@@ -114,10 +126,11 @@ public void changeAccount(Long accountId) {
         ...
     }
     finally {
-        lock.unlock();
+        lock.unlock(); // 此处可能因为超过租期抛出LockExpiredException
     }
 }
 ```
+需要注意的是，使用redis单点锁的两种方式都可能因为超过租期抛出LockExpiredException，通常我们应该使业务回滚，如果使用编程事务记得抓一下unlock
 
 通过LockableService
 ```java

@@ -2,20 +2,22 @@ package com.noir.common.lock.impl.locks;
 
 
 import com.noir.common.lock.ReentrantDLock;
+import com.noir.common.lock.excptions.LockExpiredException;
 import lombok.SneakyThrows;
+import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
 /**
  * setNX and getSet lock
  *
- * !!!: 依赖过期时间，过短会失去隔离性，过长影响资源可用性；
- *      大量getSet操作对redis的资源消耗高；
- *      无加锁标记，会在超时成功下将其它锁解开；
+ * 依赖过期时间，过短会导致大量业务超过租期使业务回滚，
+ * 过长影响资源可用性；大量getSet操作对redis的资源消耗高；
  */
 public class RedisSetNXGetSetLock extends ReentrantDLock {
     private static final Long DEFAULT_TIMEOUT_SECONDS = 30L;
@@ -26,7 +28,7 @@ public class RedisSetNXGetSetLock extends ReentrantDLock {
 
     private final RedissonClient client;
 
-    private final String nameSpace;
+    private final String namespace;
 
     private final String name;
 
@@ -37,14 +39,14 @@ public class RedisSetNXGetSetLock extends ReentrantDLock {
      */
     private final long lockExpiresMilliseconds;
 
-    public RedisSetNXGetSetLock(RedissonClient client, String nameSpace, String name) {
+    public RedisSetNXGetSetLock(RedissonClient client, String namespace, String name) {
         //默认30分钟
-        this(client, nameSpace, name, DEFAULT_TIMEOUT_SECONDS, TimeUnit.MINUTES);
+        this(client, namespace, name, DEFAULT_TIMEOUT_SECONDS, TimeUnit.MINUTES);
     }
 
-    public RedisSetNXGetSetLock(RedissonClient client, String nameSpace, String name, long expire, TimeUnit unit) {
+    public RedisSetNXGetSetLock(RedissonClient client, String namespace, String name, long expire, TimeUnit unit) {
         this.client = client;
-        this.nameSpace = nameSpace;
+        this.namespace = namespace;
         this.name = name;
         this.lockExpiresMilliseconds = unit.toMillis(expire);
     }
@@ -55,7 +57,7 @@ public class RedisSetNXGetSetLock extends ReentrantDLock {
      * @return str
      */
     private String getLockKey() {
-        return nameSpace + ":" + name;
+        return namespace + ":" + name;
     }
 
     @Override
@@ -125,11 +127,16 @@ public class RedisSetNXGetSetLock extends ReentrantDLock {
     public void unlock() {
         String lockKey = getLockKey();
         exit(lockKey);
-        Long currValue = (Long) client.getBucket(lockKey).get();
-        if (currValue != null && currValue.equals(lockValue)) {
-            log.info(lockKey + " unlock");
-            client.getBucket(lockKey).delete();
+        boolean unlocked = client.getScript().eval(
+                RScript.Mode.READ_WRITE,
+                UNLOCK_LUA_SCRIPT,
+                RScript.ReturnType.BOOLEAN,
+                Collections.singletonList(lockKey),
+                lockValue);
+        if (!unlocked) {
+            throw new LockExpiredException();
         }
+        log.info(lockKey + " unlock");
     }
 
     @Override
@@ -137,4 +144,10 @@ public class RedisSetNXGetSetLock extends ReentrantDLock {
         // pass
         return null;
     }
+
+    /**
+     * 保证原子性的解锁lua
+     */
+    private static final String UNLOCK_LUA_SCRIPT = "if redis.call('get', KEYS[1]) == ARGV[1] then redis.call('del', KEYS[1]); return true; else return false end";
+
 }
